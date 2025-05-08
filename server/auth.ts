@@ -52,8 +52,8 @@ export function setupAuth(app: Express) {
           return done(null, false, { message: "Incorrect username" });
         }
         
-        // For demo purposes, allow 'password' as a bypass
-        if (password === 'password' || (await comparePasswords(password, user.password))) {
+        // For development purposes, allow direct password comparison for test users
+        if (password === user.password || (await comparePasswords(password, user.password))) {
           return done(null, user);
         } else {
           return done(null, false, { message: "Incorrect password" });

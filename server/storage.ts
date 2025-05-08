@@ -86,13 +86,27 @@ export class MemStorage implements IStorage {
     const adminUser = {
       id: this.currentUserId++,
       username: "admin",
-      password: "password", // This will be hashed in real app
+      // Using simple password for development to make login easy
+      // In production, this would be properly hashed during user creation
+      password: "admin123", 
       email: "admin@acme.com",
-      fullName: "John Doe",
+      fullName: "Admin User",
       role: "admin",
       tenantId: tenant.id
     } as User;
     this.users.set(adminUser.id, adminUser);
+    
+    // Create a regular test user
+    const testUser = {
+      id: this.currentUserId++,
+      username: "testuser",
+      password: "test123",
+      email: "test@acme.com",
+      fullName: "Test User",
+      role: "user",
+      tenantId: tenant.id
+    } as User;
+    this.users.set(testUser.id, testUser);
 
     // Add some sample devices
     const devices: Partial<Device>[] = [

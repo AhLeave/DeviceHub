@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Helmet } from "react-helmet";
+import { useToast } from "@/hooks/use-toast";
 
 // Login form schema
 const loginSchema = z.object({
@@ -57,16 +58,88 @@ export default function AuthPage() {
     },
   });
   
-  const onLoginSubmit = (data: LoginFormValues) => {
+  const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(false);
+  
+  const onLoginSubmit = async (data: LoginFormValues) => {
     console.log('Login form submitted:', data);
-    // Temporary placeholder for login functionality
-    alert('Login functionality will be implemented once auth is fixed');
+    setIsLoading(true);
+    
+    try {
+      const response = await fetch('/api/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+        credentials: 'include'
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Login failed');
+      }
+      
+      const user = await response.json();
+      toast({
+        title: "Login successful",
+        description: `Welcome, ${user.fullName || user.username}!`,
+      });
+      
+      // Navigate to dashboard
+      navigate('/');
+    } catch (error) {
+      console.error('Login error:', error);
+      toast({
+        title: "Login failed",
+        description: error instanceof Error ? error.message : "An unknown error occurred",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
   
-  const onRegisterSubmit = (data: RegisterFormValues) => {
+  const onRegisterSubmit = async (data: RegisterFormValues) => {
     console.log('Register form submitted:', data);
-    // Temporary placeholder for registration functionality
-    alert('Registration functionality will be implemented once auth is fixed');
+    setIsLoading(true);
+    
+    try {
+      // Remove confirmPassword before sending
+      const { confirmPassword, ...userData } = data;
+      
+      const response = await fetch('/api/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(userData),
+        credentials: 'include'
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Registration failed');
+      }
+      
+      const user = await response.json();
+      toast({
+        title: "Registration successful",
+        description: `Welcome, ${user.fullName || user.username}!`,
+      });
+      
+      // Navigate to dashboard
+      navigate('/');
+    } catch (error) {
+      console.error('Registration error:', error);
+      toast({
+        title: "Registration failed",
+        description: error instanceof Error ? error.message : "An unknown error occurred",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
   
   return (
@@ -148,8 +221,9 @@ export default function AuthPage() {
                           <Button 
                             type="submit" 
                             className="w-full"
+                            disabled={isLoading}
                           >
-                            Sign in
+                            {isLoading ? "Signing in..." : "Sign in"}
                           </Button>
                         </form>
                       </Form>
@@ -265,8 +339,9 @@ export default function AuthPage() {
                           <Button 
                             type="submit" 
                             className="w-full"
+                            disabled={isLoading}
                           >
-                            Create account
+                            {isLoading ? "Creating account..." : "Create account"}
                           </Button>
                         </form>
                       </Form>
